@@ -384,18 +384,19 @@ let db;
   }
 })();
 
-// ================== READY & PRESENCE ==================
-client.on('ready', () => {
-    console.log(`✅ Logged in as ${client.user.tag}`);
 
+// ================== CLIENT READY ==================
+client.once('ready', () => {
+    console.log(`✅ Logged in as ${client.user.tag}`);
     client.user.setPresence({
         activities: [{ name: "online", type: 0 }],
         status: "online",
     });
 });
-
+  
 // تسجيل الدخول
 client.login(TOKEN);
+
 
 
 
