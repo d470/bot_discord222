@@ -147,8 +147,8 @@ client.once("ready", async () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 
   client.user.setPresence({
-    activities: [{ name: "online", type: 0 }],
-    status: "online",
+activities: [{ name: "ｂａｎｄａｒ．ｄｅｖ", type: 3 }],
+    status: "dnd",
   });
 
   // Load invites
@@ -254,6 +254,8 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
+
 // ================== LOGIN ==================
 client.login(TOKEN);
+
 
