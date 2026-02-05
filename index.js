@@ -479,12 +479,15 @@ client.on("messageCreate", async message => {
 });
 
 // ================== READY & PRESENCE ==================
-client.once('ready', () => {
-  console.log(`✅ Logged in as ${client.user.tag}`);
+client.on('ready', () => {
+    console.log(`✅ Logged in as ${client.user.tag}`);
+});
+
   client.user.setPresence({
     activities: [{ name: "online", type: 0 }], // PLAYING
     status: "online",
   });
 });
+
 
 
