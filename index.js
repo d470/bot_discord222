@@ -18,6 +18,8 @@ const sqlite3 = require("sqlite3");
 
 const TOKEN = process.env.DISCORD_TOKEN;
 
+console.log("TOKEN:", TOKEN ? "FOUND" : "MISSING");
+
 // ================== CLIENT ==================
 const client = new Client({
   intents: [
@@ -254,3 +256,4 @@ client.on("interactionCreate", async (interaction) => {
 
 // ================== LOGIN ==================
 client.login(TOKEN);
+
