@@ -12,10 +12,7 @@ const sqlite3 = require("sqlite3");
 require("dotenv").config(); // لو بتجرب محلياً
 const TOKEN = process.env.DISCORD_TOKEN;
 
-client.login(TOKEN);
-
-
-
+// ================== CLIENT ==================
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -44,16 +41,12 @@ client.on("messageCreate", async message => {
   const content = message.content.toLowerCase();
   const now = Date.now();
 
-  // ==========================================
   // دالة لمعاقبة العضو بالتايم أوت وإرسال DM
   async function punishUser(reason, durationMs) {
     try {
       const member = message.member;
-
-      // إعطاء تايم أوت للعضو
       await member.timeout(durationMs, reason);
 
-      // إرسال رسالة خاصة للعضو
       const dmEmbed = new EmbedBuilder()
         .setTitle("⚠️ تم إعطاءك تايم أوت")
         .setColor("Red")
@@ -71,7 +64,6 @@ client.on("messageCreate", async message => {
     }
   }
 
-  // ==========================================
   // كلمات سيئة
   if (config.badWords.some(word => content.includes(word))) {
     return punishUser("كلمات مسيئة", config.punishDurations.other);
@@ -105,117 +97,85 @@ client.on("messageCreate", async message => {
 });
 
 // ================== Welcome & Invite System ==================
-
-
-
-const getInviteCounts = async (guild) => {
-    return new Map(guild.invites.cache.map(invite => [invite.code, invite.uses]));
-};
-
 client.once('ready', async () => {
-    console.log('Bot is online!');
-    console.log('Code by bandar.dev!');
-    console.log('https://discord.gg/Y7ysBGFtQs');
+  console.log('Bot is online!');
+  console.log('Code by bandar.dev!');
+  console.log('https://discord.gg/Y7ysBGFtQs');
 
-    // Load all server invites
-    for (const [guildId, guild] of client.guilds.cache) {
-        try {
-            const currentInvites = await guild.invites.fetch();
-            invites.set(guildId, new Map(currentInvites.map(invite => [invite.code, invite.uses])));
-            console.log(`Loaded ${currentInvites.size} invites for guild: ${guild.name}`);
-        } catch (err) {
-            console.log(`Failed to load invites for guild: ${guild.name}`);
-            console.error(err);
-        }
+  for (const [guildId, guild] of client.guilds.cache) {
+    try {
+      const currentInvites = await guild.invites.fetch();
+      invites.set(guildId, new Map(currentInvites.map(invite => [invite.code, invite.uses])));
+      console.log(`Loaded ${currentInvites.size} invites for guild: ${guild.name}`);
+    } catch (err) {
+      console.log(`Failed to load invites for guild: ${guild.name}`);
+      console.error(err);
     }
+  }
 });
 
 client.on('inviteCreate', async invite => {
-    const guildInvites = invites.get(invite.guild.id);
-    if (guildInvites) guildInvites.set(invite.code, invite.uses);
+  const guildInvites = invites.get(invite.guild.id);
+  if (guildInvites) guildInvites.set(invite.code, invite.uses);
 });
 
 client.on('inviteDelete', async invite => {
-    const guildInvites = invites.get(invite.guild.id);
-    if (guildInvites) guildInvites.delete(invite.code);
+  const guildInvites = invites.get(invite.guild.id);
+  if (guildInvites) guildInvites.delete(invite.code);
 });
 
 client.on('guildMemberAdd', async member => {
-    const welcomeChannel = member.guild.channels.cache.get(config.welcomeChannelId);
-    const role = member.guild.roles.cache.get(config.autoRoleId);
+  const welcomeChannel = member.guild.channels.cache.get(config.welcomeChannelId);
+  const role = member.guild.roles.cache.get(config.autoRoleId);
 
-    if (role) {
-        member.roles.add(role).catch(console.error);
-    } else {
-        console.log('Role not found');
-    }
+  if (role) member.roles.add(role).catch(console.error);
 
-    const newInvites = await member.guild.invites.fetch();
-    const usedInvite = newInvites.find(inv => {
-        const prevUses = (invites.get(member.guild.id)?.get(inv.code) || 0);
-        return inv.uses > prevUses;
-    });
+  const newInvites = await member.guild.invites.fetch();
+  const usedInvite = newInvites.find(inv => {
+    const prevUses = (invites.get(member.guild.id)?.get(inv.code) || 0);
+    return inv.uses > prevUses;
+  });
 
-    let inviterMention = 'Unknown';
-    if (usedInvite && usedInvite.inviter) {
-        inviterMention = `<@${usedInvite.inviter.id}>`;
-        console.log(`Member joined with invite code ${usedInvite.code}, invited by ${inviterMention}`);
-    } else {
-        console.log(`Member joined, but no matching invite was found.`);
-    }
+  let inviterMention = 'Unknown';
+  if (usedInvite && usedInvite.inviter) {
+    inviterMention = `<@${usedInvite.inviter.id}>`;
+  }
 
-    const welcomeEmbed = new EmbedBuilder()
-        .setColor('#05131f')
-        .setTitle('Welcome to the Server!')
-        .setDescription(`مرحباً ${member}، أهلاً بك في **${member.guild.name}**! نتمنى لك إقامة ممتعة.`)
-        .addFields(
-            { name: 'Username', value: member.user.tag, inline: true },
-            { name: 'Invited By', value: inviterMention, inline: true },
-            { name: 'Invite Used', value: usedInvite ? `||${usedInvite.code}||` : 'Direct Join', inline: true },
-            { name: "You're Member", value: `${member.guild.memberCount}`, inline: true },
-            { name: 'القوانين', value: '<#1402972324814389309>.', inline: true },
-            { name: 'لتواصل مع الدعم', value: '<#1400602479728656434>.', inline: true }
-        )
-        .setThumbnail(member.user.displayAvatarURL())
-        .setTimestamp();
+  const welcomeEmbed = new EmbedBuilder()
+    .setColor('#05131f')
+    .setTitle('Welcome to the Server!')
+    .setDescription(`مرحباً ${member}، أهلاً بك في **${member.guild.name}**! نتمنى لك إقامة ممتعة.`)
+    .addFields(
+      { name: 'Username', value: member.user.tag, inline: true },
+      { name: 'Invited By', value: inviterMention, inline: true },
+      { name: 'Invite Used', value: usedInvite ? `||${usedInvite.code}||` : 'Direct Join', inline: true },
+      { name: "You're Member", value: `${member.guild.memberCount}`, inline: true },
+      { name: 'القوانين', value: '<#1402972324814389309>.', inline: true },
+      { name: 'لتواصل مع الدعم', value: '<#1400602479728656434>.', inline: true }
+    )
+    .setThumbnail(member.user.displayAvatarURL())
+    .setTimestamp();
 
-    const bannerUrl = member.user.bannerURL?.({ dynamic: true, format: 'png', size: 1024 });
-    if (bannerUrl) welcomeEmbed.setImage(bannerUrl);
+  const bannerUrl = member.user.bannerURL?.({ dynamic: true, format: 'png', size: 1024 });
+  if (bannerUrl) welcomeEmbed.setImage(bannerUrl);
 
-    // Buttons
-    const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-            .setStyle(ButtonStyle.Link)
-            .setURL('https://discord.gg/QV2GNm72df')
-            .setLabel('FiveM')
-            .setEmoji('🎤'),
-        new ButtonBuilder()
-            .setStyle(ButtonStyle.Link)
-            .setURL('https://discord.gg/8B4Cu2MW6z')
-            .setLabel('Risk')
-            .setEmoji('🎤'),
-        new ButtonBuilder()
-            .setStyle(ButtonStyle.Link)
-            .setURL('https://discord.gg/TdnweETu9r')
-            .setLabel('Voice room')
-            .setEmoji('🎤')
-    );
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setStyle(ButtonStyle.Link).setURL('https://discord.gg/QV2GNm72df').setLabel('FiveM').setEmoji('🎤'),
+    new ButtonBuilder().setStyle(ButtonStyle.Link).setURL('https://discord.gg/8B4Cu2MW6z').setLabel('Risk').setEmoji('🎤'),
+    new ButtonBuilder().setStyle(ButtonStyle.Link).setURL('https://discord.gg/TdnweETu9r').setLabel('Voice room').setEmoji('🎤')
+  );
 
-    if (welcomeChannel) {
-        welcomeChannel.send({ embeds: [welcomeEmbed], components: [row] }).catch(console.error);
-    }
+  if (welcomeChannel) welcomeChannel.send({ embeds: [welcomeEmbed], components: [row] }).catch(console.error);
 
-    // Update invite cache
-    invites.set(member.guild.id, new Map(newInvites.map(invite => [invite.code, invite.uses])));
+  invites.set(member.guild.id, new Map(newInvites.map(invite => [invite.code, invite.uses])));
 });
 
-// Corrected sendBoth function
+// ================== UTILS ==================
 function sendBoth(message, arabic, english) {
-    return message.reply({ content: `${arabic}\n${english}` });
+  return message.reply({ content: `${arabic}\n${english}` });
 }
 
-
-  // ================== COMMANDS ==================
+// ================== COMMANDS ==================
 client.on("messageCreate", async (message) => {
   if (!message.content.startsWith(prefix) || message.author.bot || !message.guild) return;
 
@@ -226,9 +186,7 @@ client.on("messageCreate", async (message) => {
     return message.reply("❌ ما عندك صلاحية استخدام هذا الأمر.");
 
   // ---------------- PING ----------------
-  if (command === "ping") {
-    return sendBoth(message, "🏓 البوت شغال تمام!", "🏓 Bot is up and running!");
-  }
+  if (command === "ping") return sendBoth(message, "🏓 البوت شغال تمام!", "🏓 Bot is up and running!");
 
   // ---------------- LOCK / UNLOCK ----------------
   if (command === "lock" || command === "اقفل") {
@@ -244,9 +202,7 @@ client.on("messageCreate", async (message) => {
   // ---------------- CLEAR ----------------
   if (command === "مسح") {
     const amount = parseInt(args[0]);
-    if (!amount || amount < 1 || amount > 100) {
-      return sendBoth(message, "❌ رقم بين 1-100", "❌ Number between 1-100.");
-    }
+    if (!amount || amount < 1 || amount > 100) return sendBoth(message, "❌ رقم بين 1-100", "❌ Number between 1-100.");
     await message.channel.bulkDelete(amount, true);
     return sendBoth(message, `✅ تم حذف ${amount} رسالة.`, `✅ Deleted ${amount} messages.`);
   }
@@ -254,9 +210,7 @@ client.on("messageCreate", async (message) => {
   // ---------------- KICK ----------------
   if (command === "kick" || command === "كيك") {
     const member = message.mentions.members.first();
-    if (!member || !member.kickable) {
-      return sendBoth(message, "❌ لا يمكن طرده.", "❌ Cannot kick this user.");
-    }
+    if (!member || !member.kickable) return sendBoth(message, "❌ لا يمكن طرده.", "❌ Cannot kick this user.");
     await member.kick();
     return sendBoth(message, `✅ تم طرد ${member.user.tag}.`, `✅ Kicked ${member.user.tag}.`);
   }
@@ -264,9 +218,7 @@ client.on("messageCreate", async (message) => {
   // ---------------- BAN ----------------
   if (command === "ban" || command === "باند") {
     const member = message.mentions.members.first();
-    if (!member || !member.bannable) {
-      return sendBoth(message, "❌ لا يمكن حظره.", "❌ Cannot ban this user.");
-    }
+    if (!member || !member.bannable) return sendBoth(message, "❌ لا يمكن حظره.", "❌ Cannot ban this user.");
     await member.ban();
     return sendBoth(message, `✅ تم حظر ${member.user.tag}.`, `✅ Banned ${member.user.tag}.`);
   }
@@ -275,7 +227,6 @@ client.on("messageCreate", async (message) => {
   if (command === "unban" || command === "فك-باند") {
     const userId = args[0]?.replace(/[<@!>]/g, "");
     if (!userId) return sendBoth(message, "❌ اكتب ID العضو.", "❌ Provide user ID.");
-
     try {
       await message.guild.bans.remove(userId);
       return sendBoth(message, `✅ تم فك الحظر عن ${userId}.`, `✅ Unbanned ${userId}.`);
@@ -287,10 +238,8 @@ client.on("messageCreate", async (message) => {
   // ---------------- RULES ----------------
   if (command === "قوانين") {
     if (!args.length) return message.reply("❌ اكتب محتوى القوانين بعد الأمر.");
-
     const content = args.join(" ");
     await message.delete().catch(() => {});
-
     const embed = new EmbedBuilder()
       .setTitle("📜 قوانين السيرفر")
       .setDescription(content)
@@ -298,27 +247,18 @@ client.on("messageCreate", async (message) => {
       .setThumbnail(message.guild.iconURL() || null)
       .setImage(config.serverImageUrl)
       .setTimestamp();
-
     const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId("accept_rules")
-        .setLabel("✅ أوافق على القوانين")
-        .setStyle(ButtonStyle.Success)
+      new ButtonBuilder().setCustomId("accept_rules").setLabel("✅ أوافق على القوانين").setStyle(ButtonStyle.Success)
     );
-
     return message.channel.send({ embeds: [embed], components: [row] });
   }
 
   // ---------------- ANNOUNCEMENT ----------------
   if (command === "اعلان") {
     if (!args.length) return message.reply("❌ اكتب محتوى الإعلان بعد الأمر.");
-
     const content = args.join(" ");
     await message.delete().catch(() => {});
-
-    const announcementChannel =
-      message.guild.channels.cache.get(config.announcementChannelId) || message.channel;
-
+    const announcementChannel = message.guild.channels.cache.get(config.announcementChannelId) || message.channel;
     const embed = new EmbedBuilder()
       .setTitle("📢 إعلان مجتمع C4")
       .setDescription(content)
@@ -326,23 +266,19 @@ client.on("messageCreate", async (message) => {
       .setThumbnail(message.guild.iconURL() || null)
       .setImage(config.serverImageUrl)
       .setTimestamp();
-
     return announcementChannel.send({ embeds: [embed] });
   }
 
   // ---------------- SAY ----------------
   if (command === "say") {
     if (!args.length) return message.reply("❌ اكتب الرسالة بعد الأمر.");
-
     const content = args.join(" ");
     await message.delete().catch(() => {});
-
     const embed = new EmbedBuilder()
       .setAuthor({ name: message.guild.name, iconURL: message.guild.iconURL() || null })
       .setDescription(content)
       .setColor("#2F3136")
       .setTimestamp();
-
     return message.channel.send({ embeds: [embed] });
   }
 
@@ -371,9 +307,7 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
-// -------------------------------------------------------------------------------------------
-
-
+// ================== DATABASE ==================
 let db;
 (async () => {
   try {
@@ -381,7 +315,6 @@ let db;
       filename: "./leveling.db",
       driver: sqlite3.Database
     });
-
     await db.run("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, level INTEGER, xp INTEGER)");
     console.log("Database ready!");
   } catch (err) {
@@ -389,9 +322,8 @@ let db;
   }
 })();
 
-function getRequiredXP(level) {
-  return level * level * 100;
-}
+// ================== LEVELING FUNCTIONS ==================
+function getRequiredXP(level) { return level * level * 100; }
 
 async function sendLevelUpMessage(userId, newLevel) {
   try {
@@ -401,7 +333,6 @@ async function sendLevelUpMessage(userId, newLevel) {
       .setTitle("Level Up!")
       .setDescription(`<@${userId}> has reached level ${newLevel}! 🎉`)
       .setTimestamp();
-
     await channel.send({ embeds: [embed] });
 
     if (config.levelRoles[newLevel]) {
@@ -418,18 +349,15 @@ async function sendLevelUpMessage(userId, newLevel) {
 async function updateUserXP(userId, xpToAdd) {
   try {
     const row = await db.get("SELECT * FROM users WHERE id = ?", userId);
-
     if (row) {
       let newXP = row.xp + xpToAdd;
       let newLevel = row.level;
       let leveledUp = false;
-
       while (newXP >= getRequiredXP(newLevel)) {
         newXP -= getRequiredXP(newLevel);
         newLevel++;
         leveledUp = true;
       }
-
       if (leveledUp) await sendLevelUpMessage(userId, newLevel);
       await db.run("UPDATE users SET xp = ?, level = ? WHERE id = ?", newXP, newLevel, userId);
     } else {
@@ -440,6 +368,7 @@ async function updateUserXP(userId, xpToAdd) {
   }
 }
 
+// ================== XP EVENTS ==================
 client.on("messageCreate", async message => {
   if (message.author.bot) return;
 
@@ -476,24 +405,15 @@ client.on("messageCreate", async message => {
   }
 });
 
-
-// -------------------------------------------------------------------------------------------
-
-
-client.once("clientReady", () => {
-  console.log(`✅ Logged in as ${client.user.tag}`);
-
-    // هنا تضيف حالة البوت
-    client.user.setPresence({
-        activities: [
-            {
-                name: "ｂａｎｄａｒ．ｄｅｖ", // رسالة حالة البوت
-                type: 3, // 0 = PLAYING, 1 = STREAMING, 2 = LISTENING, 3 = WATCHING, 5 = COMPETING
-            }
-        ],
-        status: "dnd", // online, idle, dnd, invisible
-    });
+// ================== PRESENCE ==================
+client.once("ready", () => {
+  client.user.setPresence({
+    activities: [{ name: "ｂａｎｄａｒ．ｄｅｖ", type: 3 }],
+    status: "dnd",
+  });
 });
 
-
-client.login(TOKEN);
+// ================== LOGIN ==================
+client.login(TOKEN)
+  .then(() => console.log("Bot logged in successfully!"))
+  .catch(err => console.error("Failed to login:", err));
