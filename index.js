@@ -369,22 +369,6 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
-// ================== DATABASE ==================
-let db;
-(async () => {
-  try {
-    db = await open({
-      filename: "./leveling.db",
-      driver: sqlite3.Database
-    });
-    await db.run("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, level INTEGER, xp INTEGER)");
-    console.log("Database ready!");
-  } catch (err) {
-    console.error("Database error:", err);
-  }
-})();
-
-
 // ================== CLIENT READY ==================
 client.once('ready', () => {
     console.log(`✅ Logged in as ${client.user.tag}`);
@@ -396,12 +380,3 @@ client.once('ready', () => {
   
 // تسجيل الدخول
 client.login(TOKEN);
-
-
-
-
-
-
-
-
-
