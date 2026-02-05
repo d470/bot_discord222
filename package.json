@@ -1,32 +1,11 @@
 {
   "name": "my-discord-bot",
   "version": "1.0.0",
-<<<<<<< HEAD
-  "description": "Discord bot",
-=======
-  "description": "A merged Discord bot with leveling, welcome messages",
->>>>>>> 0ea5696 (Initial commit)
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
-<<<<<<< HEAD
   "dependencies": {
-    "discord.js": "^14.11.0",
-    "sqlite": "^4.1.2",
-    "sqlite3": "^5.1.6"
-  },
-  "engines": {
-    "node": ">=20.0.0"
-=======
-  "author": "bandar.dev",
-  "dependencies": {
-    "discord.js": "^14.25.1",
-    "sqlite": "^5.0.0",
-    "sqlite3": "^5.1.7"
-  },
-  "engines": {
-    "node": ">=16.0.0"
->>>>>>> 0ea5696 (Initial commit)
+    "discord.js": "^14.11.0"
   }
 }
