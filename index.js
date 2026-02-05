@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // ================== SETUP ==================
 const {
   Client, GatewayIntentBits, Partials, PermissionsBitField,
@@ -1006,20 +1005,3 @@ client.once("clientReady", () => {
 });
 
 client.login(TOKEN);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
->>>>>>> 0ea5696 (Initial commit)
