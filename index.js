@@ -481,13 +481,14 @@ client.on("messageCreate", async message => {
 // ================== READY & PRESENCE ==================
 client.on('ready', () => {
     console.log(`✅ Logged in as ${client.user.tag}`);
+
+    client.user.setPresence({
+        activities: [{ name: "online", type: 0 }], // PLAYING
+        status: "online",
+    });
 });
 
-  client.user.setPresence({
-    activities: [{ name: "online", type: 0 }], // PLAYING
-    status: "online",
-  });
-});
+
 
 
 
