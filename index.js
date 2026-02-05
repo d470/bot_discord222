@@ -408,12 +408,15 @@ client.on("messageCreate", async message => {
 // ================== PRESENCE ==================
 client.once("ready", () => {
   client.user.setPresence({
-    activities: [{ name: "ｂａｎｄａｒ．ｄｅｖ", type: 3 }],
-    status: "dnd",
+activities: [{ name: "online", type: 0 }], // PLAYING
+status: "online",
+
   });
 });
 
 // ================== LOGIN ==================
-client.login(TOKEN)
-  .then(() => console.log("Bot logged in successfully!"))
-  .catch(err => console.error("Failed to login:", err));
+client.on('ready', () => {
+    console.log(`✅ Logged in as ${client.user.tag}`);
+});
+
+
