@@ -488,6 +488,11 @@ client.on('ready', () => {
     });
 });
 
+// تسجيل الدخول
+client.login(TOKEN);
+
+
+
 
 
 
