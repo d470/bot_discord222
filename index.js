@@ -384,112 +384,19 @@ let db;
   }
 })();
 
-
-// ================== LEVELING FUNCTIONS ==================
-function getRequiredXP(level) { return level * level * 100; }
-
-async function sendLevelUpMessage(userId, newLevel) {
-  try {
-    const channel = await client.channels.fetch(config.levelUpChannelId).catch(() => null);
-    if (!channel) return;
-
-    const embed = new EmbedBuilder()
-      .setColor("#00ff00")
-      .setTitle("Level Up!")
-      .setDescription(`<@${userId}> has reached level ${newLevel}! 🎉`)
-      .setTimestamp();
-
-    await channel.send({ embeds: [embed] }).catch(() => {});
-
-    if (config.levelRoles[newLevel]) {
-      const guild = channel.guild;
-      const member = await guild.members.fetch(userId).catch(() => null);
-      const role = await guild.roles.fetch(config.levelRoles[newLevel]).catch(() => null);
-      if (member && role) await member.roles.add(role).catch(() => {});
-    }
-  } catch (err) {
-    console.error("Error in sendLevelUpMessage:", err);
-  }
-}
-
-async function updateUserXP(userId, xpToAdd) {
-  try {
-    const row = await db.get("SELECT * FROM users WHERE id = ?", userId);
-    if (row) {
-      let newXP = row.xp + xpToAdd;
-      let newLevel = row.level;
-      let leveledUp = false;
-      while (newXP >= getRequiredXP(newLevel)) {
-        newXP -= getRequiredXP(newLevel);
-        newLevel++;
-        leveledUp = true;
-      }
-      if (leveledUp) await sendLevelUpMessage(userId, newLevel);
-      await db.run("UPDATE users SET xp = ?, level = ? WHERE id = ?", newXP, newLevel, userId);
-    } else {
-      await db.run("INSERT INTO users (id, level, xp) VALUES (?, ?, ?)", userId, 1, xpToAdd);
-    }
-  } catch (err) {
-    console.error("Error updating XP:", err);
-  }
-}
-
-// ================== XP EVENTS ==================
-client.on("messageCreate", async message => {
-  if (message.author.bot) return;
-  if (!message.content.startsWith("&") && message.channel.id !== config.levelUpChannelId) {
-    await updateUserXP(message.author.id, 10);
-  }
-
-  if (message.content === "&xp") {
-    const users = await db.all("SELECT * FROM users ORDER BY level DESC, xp DESC LIMIT 10");
-    const embed = new EmbedBuilder()
-      .setColor("#0099ff")
-      .setTitle("XP Leaderboard")
-      .setDescription("Top users by XP")
-      .setTimestamp();
-
-    for (let i = 0; i < users.length; i++) {
-      const member = await client.users.fetch(users[i].id).catch(() => null);
-      embed.addFields({ name: `${i + 1}. ${member ? member.tag : users[i].id}`, value: `Level: ${users[i].level} | XP: ${users[i].xp}` });
-    }
-
-    message.channel.send({ embeds: [embed] }).catch(() => {});
-  }
-
-  if (message.content === "&rank") {
-    const row = await db.get("SELECT * FROM users WHERE id = ?", message.author.id);
-    if (row) {
-      const users = await db.all("SELECT * FROM users ORDER BY level DESC, xp DESC");
-      const rank = users.findIndex(u => u.id === message.author.id) + 1;
-      const embed = new EmbedBuilder()
-        .setColor("#0099ff")
-        .setTitle(`${message.author.username}'s Rank`)
-        .addFields(
-          { name: "Rank", value: `#${rank}`, inline: true },
-          { name: "Level", value: `${row.level}`, inline: true },
-          { name: "XP", value: `${row.xp}`, inline: true }
-        );
-
-      message.channel.send({ embeds: [embed] }).catch(() => {});
-    } else {
-      message.channel.send("You don't have any XP yet.").catch(() => {});
-    }
-  }
-});
-
 // ================== READY & PRESENCE ==================
 client.on('ready', () => {
     console.log(`✅ Logged in as ${client.user.tag}`);
 
     client.user.setPresence({
-        activities: [{ name: "online", type: 0 }], // PLAYING
+        activities: [{ name: "online", type: 0 }],
         status: "online",
     });
 });
 
 // تسجيل الدخول
 client.login(TOKEN);
+
 
 
 
