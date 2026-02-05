@@ -9,8 +9,11 @@ const config = require("./config.json");
 const { open } = require("sqlite");
 const sqlite3 = require("sqlite3");
 
-require('dotenv').config();
+require("dotenv").config(); // لو بتجرب محلياً
 const TOKEN = process.env.DISCORD_TOKEN;
+
+client.login(TOKEN);
+
 
 
 const client = new Client({
@@ -491,5 +494,6 @@ client.once("clientReady", () => {
         status: "dnd", // online, idle, dnd, invisible
     });
 });
+
 
 client.login(TOKEN);
