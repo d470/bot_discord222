@@ -87,7 +87,7 @@ client.on("messageCreate", async (message) => {
       }
 
       const embed = new EmbedBuilder()
-        .setTitle("⚠️ تم إعطاؤك تايم أوت")
+        .setTitle("⚠️ You have been given time out")
         .setColor("Red")
         .addFields(
           { name: "السبب", value: reason },
@@ -147,7 +147,7 @@ client.once("ready", async () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 
   client.user.setPresence({
-activities: [{ name: "ｂａｎｄａｒ．ｄｅｖ", type: 3 }],
+activities: [{ name: "ReX.DeV", type: 3 }],
     status: "dnd",
   });
 
@@ -220,20 +220,20 @@ client.on("messageCreate", async (message) => {
   const command = args.shift().toLowerCase();
 
   if (command === "ping") {
-    return message.reply("🏓 البوت شغال!");
+    return message.reply("The bot is working");
   }
 
-  if (command === "مسح") {
+  if (command === "clear") {
     if (
       !message.member.permissions.has(
         PermissionsBitField.Flags.ManageMessages
       )
     )
-      return message.reply("❌ ما عندك صلاحية");
+      return message.reply("you don't have permission");
 
     const amount = parseInt(args[0]);
     if (!amount || amount > 100)
-      return message.reply("❌ رقم من 1 إلى 100");
+      return message.reply("Choose a number between 1 and 100");
 
     await message.channel.bulkDelete(amount, true);
   }
@@ -245,7 +245,7 @@ client.on("interactionCreate", async (interaction) => {
 
   if (interaction.customId === "accept_rules") {
     await interaction.reply({
-      content: "✅ وافقت على القوانين",
+      content: "✅ Agreed to the rules",
       ephemeral: true,
     });
 
@@ -257,5 +257,6 @@ client.on("interactionCreate", async (interaction) => {
 
 // ================== LOGIN ==================
 client.login(TOKEN);
+
 
 
