@@ -4,10 +4,8 @@ const {
   GatewayIntentBits,
   Partials,
   EmbedBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  PermissionsBitField
+  PermissionsBitField,
+  AuditLogEvent
 } = require("discord.js");
 
 require("dotenv").config();
@@ -44,27 +42,104 @@ let db;
 
 // ================== DATABASE ==================
 (async () => {
-  try {
-    db = await open({
-      filename: "./leveling.db",
-      driver: sqlite3.Database,
-    });
+  db = await open({
+    filename: "./leveling.db",
+    driver: sqlite3.Database,
+  });
 
-    await db.run(`
-      CREATE TABLE IF NOT EXISTS users (
-        id TEXT PRIMARY KEY,
-        level INTEGER DEFAULT 1,
-        xp INTEGER DEFAULT 0
-      )
-    `);
+  await db.run(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      level INTEGER DEFAULT 1,
+      xp INTEGER DEFAULT 0
+    )
+  `);
 
-    console.log("🗄️ Database ready!");
-  } catch (err) {
-    console.error("Database error:", err);
-  }
+  console.log("🗄️ Database ready!");
 })();
 
-// ================== ANTI SPAM / FILTER ==================
+// ================== LOG FUNCTION ==================
+async function sendLog(guild, embed) {
+  const channel = guild.channels.cache.get(config.logChannelId);
+  if (channel) channel.send({ embeds: [embed] }).catch(() => {});
+}
+
+// ================== ANTI NUKE FUNCTION ==================
+async function punishNuker(guild, executor, reason, targetName) {
+  if (!executor || executor.id === config.ownerId) return;
+
+  const member = await guild.members.fetch(executor.id).catch(() => null);
+  if (!member || !member.moderatable) return;
+
+  await member.roles.set([]).catch(() => {});
+  await member.timeout(7 * 24 * 60 * 60 * 1000, reason).catch(() => {});
+
+  const embed = new EmbedBuilder()
+    .setColor("Red")
+    .setTitle("🚨 Anti Nuke System")
+    .setDescription(`المخرب: ${executor}`)
+    .addFields(
+      { name: "السبب", value: reason },
+      { name: "العقوبة", value: "إزالة جميع الرتب + تايم اوت أسبوع" },
+      { name: "المستهدف", value: targetName }
+    )
+    .setTimestamp();
+
+  sendLog(guild, embed);
+}
+
+// ================== READY ==================
+client.once("ready", async () => {
+  console.log(`✅ Logged in as ${client.user.tag}`);
+
+  client.user.setPresence({
+    activities: [{ name: "ReX.DeV", type: 3 }],
+    status: "dnd",
+  });
+
+  client.guilds.cache.forEach(async (guild) => {
+    const invs = await guild.invites.fetch().catch(() => null);
+    if (invs)
+      invites.set(guild.id, new Map(invs.map((i) => [i.code, i.uses])));
+  });
+});
+
+// ================== ANTI NUKE EVENTS ==================
+client.on("channelDelete", async (channel) => {
+  const logs = await channel.guild.fetchAuditLogs({
+    limit: 1,
+    type: AuditLogEvent.ChannelDelete,
+  });
+
+  const entry = logs.entries.first();
+  if (!entry) return;
+
+  punishNuker(
+    channel.guild,
+    entry.executor,
+    "حذف روم",
+    `Channel: ${channel.name}`
+  );
+});
+
+client.on("roleDelete", async (role) => {
+  const logs = await role.guild.fetchAuditLogs({
+    limit: 1,
+    type: AuditLogEvent.RoleDelete,
+  });
+
+  const entry = logs.entries.first();
+  if (!entry) return;
+
+  punishNuker(
+    role.guild,
+    entry.executor,
+    "حذف رتبة",
+    `Role: ${role.name}`
+  );
+});
+
+// ================== ANTI SPAM ==================
 client.on("messageCreate", async (message) => {
   if (message.author.bot || !message.guild) return;
 
@@ -81,55 +156,26 @@ client.on("messageCreate", async (message) => {
   const now = Date.now();
 
   async function punishUser(reason, durationMs = 5000) {
-    try {
-      if (member.moderatable) {
-        await member.timeout(durationMs, reason);
-      }
-
-      const embed = new EmbedBuilder()
-        .setTitle("⚠️ You have been given time out")
-        .setColor("Red")
-        .addFields(
-          { name: "السبب", value: reason },
-          { name: "المدة", value: `${durationMs / 1000} ثانية` },
-          { name: "الرسالة", value: message.content || "—" }
-        )
-        .setTimestamp();
-
-      await member.send({ embeds: [embed] }).catch(() => {});
-    } catch (err) {
-      console.error("Punish error:", err);
+    if (member.moderatable) {
+      await member.timeout(durationMs, reason).catch(() => {});
     }
   }
 
-  // كلمات سيئة
   if (config.badWords?.some((w) => content.includes(w))) {
     await punishUser("كلمات مسيئة");
     return;
   }
 
-  // everyone
   if (message.mentions.everyone) {
     await punishUser("منشن everyone");
     return;
   }
 
-  // روابط
   if (/https?:\/\/|discord\.gg|www\.|\.com|\.net|\.org|\.io|\.gg/i.test(content)) {
     await punishUser("نشر روابط");
     return;
   }
 
-  // إيموجي سبام
-  const emojiCount =
-    (content.match(/<a?:\w+:\d+>|[\uD800-\uDBFF][\uDC00-\uDFFF]/g) || []).length;
-
-  if (emojiCount >= (config.emojiSpamLimit || 10)) {
-    await punishUser("إيموجي سبام");
-    return;
-  }
-
-  // سبام رسائل
   const timestamps = userMessages.get(member.id) || [];
   const filtered = timestamps.filter(
     (t) => now - t < (config.timeWindow || 5000)
@@ -141,25 +187,6 @@ client.on("messageCreate", async (message) => {
     await punishUser("سبام رسائل");
   }
 });
-
-// ================== READY ==================
-client.once("ready", async () => {
-  console.log(`✅ Logged in as ${client.user.tag}`);
-
-  client.user.setPresence({
-activities: [{ name: "ReX.DeV", type: 3 }],
-    status: "dnd",
-  });
-
-  // Load invites
-  client.guilds.cache.forEach(async (guild) => {
-    try {
-      const invs = await guild.invites.fetch();
-      invites.set(guild.id, new Map(invs.map((i) => [i.code, i.uses])));
-    } catch {}
-  });
-});
-
 // ================== INVITES ==================
 client.on("inviteCreate", (invite) => {
   const map = invites.get(invite.guild.id);
@@ -257,6 +284,7 @@ client.on("interactionCreate", async (interaction) => {
 
 // ================== LOGIN ==================
 client.login(TOKEN);
+
 
 
 
