@@ -1,4 +1,3 @@
-
 {
   "ownerId": "1114668397725220954",
   "logChannelId": "1196376675055845426",
@@ -15,6 +14,15 @@
     "1319779381471608932"
   ],
 
+  "antiNuke": {
+    "enabled": true,
+    "channelDeleteLimit": 3,
+    "roleDeleteLimit": 3,
+    "adminGiveProtection": true,
+    "webhookProtection": true,
+    "timeWindow": 10000
+  },
+
   "emojiSpamLimit": 10,
   "spamLimit": 10,
   "timeWindow": 10000,
@@ -25,8 +33,23 @@
   },
 
   "badWords": [
-    "كلب","قحبة","خنيث","حقير","زق","يلعن","عاهرة","نجس","متناك","كس امك"
+    "كلب",
+    "قحبة",
+    "خنيث",
+    "حقير",
+    "زق",
+    "يلعن",
+    "عاهرة",
+    "نجس",
+    "متناك",
+    "كس امك"
   ],
+
+  "nukePunishmentRoleId": "1401676811448094850",
+
+  "welcomeChannelId": "1195476297133084733",
+  "autoRoleId": "1054383146872864879",
+  "rulesRoleId": "1405417400614260756",
 
   "levelUpChannelId": "1402972335681699914",
 
@@ -40,17 +63,11 @@
     "7": "1398391775667814400"
   },
 
-  "welcomeChannelId": "1195476297133084733",
-  "autoRoleId": "1054383146872864879",
-  "rulesRoleId": "1405417400614260756",
-
   "roleIds": {
     "SERVEROWNER": "1319779381471608932",
     "fullAccess": "1209871038284832908",
     "mediumAccess": "1195472593541673031"
   },
-
-  "nukePunishmentRoleId": "1401676811448094850",
 
   "serverImageUrl": "https://tinyurl.com/4n4zr9k6",
   "announcementChannelId": "1402972331680206942"
