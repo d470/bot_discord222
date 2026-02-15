@@ -16,8 +16,8 @@
 
   "antiNuke": {
     "enabled": true,
-    "channelDeleteLimit": 3,
-    "roleDeleteLimit": 3,
+    "channelDeleteLimit": 1,
+    "roleDeleteLimit": 1,
     "adminGiveProtection": true,
     "webhookProtection": true,
     "timeWindow": 10000
